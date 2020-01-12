@@ -1,0 +1,17 @@
+[
+  {
+    "name": "jenkins-master",
+    "image": "quay.io/uefadevops/jenkins",
+    "cpu": "1024",
+    "memory": "2048",
+    "memoryReservation": "1024",
+    "essential": true,
+    "mountPoints": [
+      {
+        "containerPath": "/var/lib/jenkins_home/",
+        "readOnly": false,
+        "sourceVolume": "/mnt/jenkins_home"
+      }
+    ]
+  }
+]
