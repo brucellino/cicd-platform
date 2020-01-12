@@ -9,6 +9,8 @@ The module consists of the following services and resources:
   - subnet
 - ECS
   - Cluster
+  - Task definition
+  - Service
 - EFS
   - File system
   - Mount point on private subnet
