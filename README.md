@@ -5,7 +5,7 @@ This is the repo for the CI/CD pipeline.
 The platform is made up of:
 
 - cloud envelope
-- Vault secrets management svg-coverity-stream
+- Vault secrets management platform
 - Distributed storage
   - Jenkins master configuration
   - Jenkins artifacts
