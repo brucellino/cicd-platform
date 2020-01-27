@@ -1,4 +1,15 @@
+# cloud
+provider "aws" {
+  region = "${var.region}"
+}
+
+data "aws_billing_service_account" "main" {}
+
 # Variables
+variable "region" {
+  type    = "string"
+  default = "eu-central-1"
+}
 variable "admin" {
   type    = "string"
   default = "Bruce.Becker"
@@ -6,7 +17,7 @@ variable "admin" {
 
 variable "app" {
   type    = "string"
-  default = "jenkins-master"
+  default = "jenkins"
 }
 
 variable "vpc_cidr_block" {
@@ -84,4 +95,15 @@ resource "aws_subnet" "jenkins_master_b" {
 resource "aws_route_table_association" "ra" {
   subnet_id      = "${aws_subnet.jenkins_master_a.id}"
   route_table_id = "${aws_route_table.rt.id}"
+}
+
+
+# security groups
+resource "aws_security_group" "jenkins_master" {
+  name = "${var.app}-master"
+  description = "Jenkins master security group"
+  vpc_id      = "${aws_vpc.jenkins_master.id}"
+  tags = {
+    Name = "${var.app}-master"
+  }
 }
