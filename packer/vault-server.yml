@@ -1,0 +1,71 @@
+---
+- name: Configure Vault instance
+  hosts: vault-servers
+  become: true
+  tasks:
+    - name: Ensure prerequisites are present
+      package:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      loop:
+        - gzip
+        - unzip
+
+    - name: Ensure vault group present
+      group:
+        gid: 1001
+        name: vault
+        state: present
+
+    - name: Ensure vault user is present
+      user:
+        uid: 1001
+        name: vault
+        state: present
+        group: vault
+        system: true
+        groups:
+          - vault
+        append: true
+        home: /etc/vault.d
+        comment: "Ansible Managed Vault user"
+        shell: /bin/false
+
+    - name: Ensure vault binary dir
+      file:
+        path: /usr/local/bin/
+        state: directory
+        mode: '01777'
+
+    - name: Get vault binary
+      unarchive:
+        creates: /usr/local/bin/vault
+        owner: vault
+        group: vault
+        src: https://releases.hashicorp.com/vault/1.3.2/vault_1.3.2_linux_amd64.zip
+        dest: /usr/local/bin/
+        remote_src: true
+
+    - name: Ensure storage path
+      file:
+        path: /mnt/vault/data
+        state: directory
+
+    - name: Push Vault config
+      copy:
+        src: vault.hcl
+        dest: /etc/vault.d/vault.hcl
+
+    - name: Create the vault systemd unit
+      copy:
+        src: vault.service
+        dest: /etc/systemd/system/vault.service
+
+    - name: Ensure service is started
+      systemd:
+        name: vault
+        enabled: true
+        daemon_reload: true
+        masked: false
+        state: restarted

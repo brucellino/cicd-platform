@@ -39,12 +39,11 @@
   ],
   "provisioners": [
     {
-      "type": "shell",
-      "inline": [
-        "curl -X GET  https://releases.hashicorp.com/vault/1.3.2/vault_1.3.2_linux_amd64.zip | gunzip -c > vault",
-        "sudo mv vault /usr/bin/",
-        "sudo chmod a+x /usr/bin/vault"
-      ]
+      "type": "ansible",
+      "playbook_file": "vault-server.yml",
+      "groups": "vault-servers",
+      "user": "ubuntu"
+
     }
   ],
   "post-processors": [
