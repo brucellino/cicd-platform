@@ -1,5 +1,5 @@
 variable "pubkey_path" {
-  type    = "string"
+  type    = string
 }
 
 data "local_file" "manifest" {
@@ -10,6 +10,15 @@ data "local_file" "pubkey" {
   filename = "${var.pubkey_path}"
 }
 
+data "template_cloudinit_config" "config" {
+  gzip = false
+  base64_encode = false
+  part {
+    filename = "init.cfg"
+    content_type = "text/cloud-config"
+    content = "${templatefile("${path.module}/vault.hcl.tpl", { ip = aws_instance.vault.private_ip})}"
+  }
+}
 data "aws_vpc" "vpc" {
   filter {
     name = "tag:created_by"
@@ -32,11 +41,11 @@ locals {
 
 resource "aws_key_pair" "vault_key" {
   key_name = "vault_key"
-  public_key = "${data.local_file.pubkey.content}"
+  public_key = data.local_file.pubkey.content
 }
 
 resource "aws_security_group" "ssh" {
-  vpc_id = "${data.aws_vpc.vpc.id}"
+  vpc_id = data.aws_vpc.vpc.id
   name = "ssh"
   description = "SSH Security Group"
   tags = {
@@ -50,7 +59,7 @@ resource "aws_security_group_rule" "ssh_egress" {
   to_port = 65535
   protocol = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.ssh.id}"
+  security_group_id = aws_security_group.ssh.id
 }
 
 resource "aws_security_group_rule" "ssh_ingress" {
@@ -60,6 +69,14 @@ resource "aws_security_group_rule" "ssh_ingress" {
   protocol = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
   security_group_id = "${aws_security_group.ssh.id}"
+}
+
+resource "aws_s3_bucket" "vault_secrets" {
+  bucket = "uefa-devops-vault-secrets"
+  acl = "private"
+  tags = {
+    Name = "uefa-devops-vault-storage"
+  }
 }
 
 resource "aws_instance" "vault" {
@@ -73,4 +90,12 @@ resource "aws_instance" "vault" {
     volume_type = "gp2"
     volume_size = "40"
   }
+}
+
+output "instance_ip" {
+  value = aws_instance.vault.public_ip
+}
+
+output "ami_used" {
+  value = local.ami_id
 }
