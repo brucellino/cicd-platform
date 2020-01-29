@@ -1,4 +1,4 @@
-variable "pubkey_path" {
+variable "key_path" {
   type    = string
 }
 
@@ -7,18 +7,9 @@ data "local_file" "manifest" {
 }
 
 data "local_file" "pubkey" {
-  filename = "${var.pubkey_path}"
+  filename = "${var.key_path}.pub"
 }
 
-data "template_cloudinit_config" "config" {
-  gzip = false
-  base64_encode = false
-  part {
-    filename = "init.cfg"
-    content_type = "text/cloud-config"
-    content = "${templatefile("${path.module}/vault.hcl.tpl", { ip = aws_instance.vault.private_ip})}"
-  }
-}
 data "aws_vpc" "vpc" {
   filter {
     name = "tag:created_by"
@@ -32,6 +23,7 @@ data "aws_subnet" "a" {
     values = ["jenkins subnet a"]
   }
 }
+
 locals {
   content = jsondecode(data.local_file.manifest.content)
   builds = lookup(local.content, "builds")
@@ -68,7 +60,7 @@ resource "aws_security_group_rule" "ssh_ingress" {
   to_port = 22
   protocol = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.ssh.id}"
+  security_group_id = aws_security_group.ssh.id
 }
 
 resource "aws_s3_bucket" "vault_secrets" {
@@ -80,10 +72,10 @@ resource "aws_s3_bucket" "vault_secrets" {
 }
 
 resource "aws_instance" "vault" {
-  ami = "${local.ami_id}"
-  key_name = "${aws_key_pair.vault_key.key_name}"
+  ami = local.ami_id
+  key_name = aws_key_pair.vault_key.key_name
   instance_type = "t2.micro"
-  subnet_id = "${data.aws_subnet.a.id}"
+  subnet_id = data.aws_subnet.a.id
   associate_public_ip_address = true
   security_groups = ["${aws_security_group.ssh.id}"]
   root_block_device {
