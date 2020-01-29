@@ -10,20 +10,36 @@ services:
       - PLUGINS_FORCE_UPGRADE=true
     volumes:
       - "./jenkins-data/:/casc"
-    networks:
-      - platform
   vault:
     image: vault
     cap_add:
       - IPC_LOCK
     environment:
-      - VAULT_DEV_ROOT_TOKEN_ID=myroot
+      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_ROOT_TOKEN_ID}
       - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:1234
     ports:
       - 1234:1234
-    networks:
-      - platform
-networks:
-  plaform:
-volumes:
-  jenkins_home:
+  rundeck:
+    image: rundeck/rundeck:3.2.1
+    environment:
+      RUNDECK_DATABASE_DRIVER: com.mysql.jdbc.Driver
+      RUNDECK_DATABASE_USERNAME: rundeck
+      RUNDECK_DATABASE_PASSWORD: rundeck
+      RUNDECK_DATABASE_URL: jdbc:mysql://mysql/rundeck?autoReconnect=true&useSSL=false
+    ports:
+      - 4440:4440
+    links:
+      - mysql
+    volumes:
+      - "./rundeck-data:/home/rundeck/server/data"
+  mysql:
+    image: mysql:5.7
+    expose:
+      - 3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=rundeck
+      - MYSQL_USER=rundeck
+      - MYSQL_PASSWORD=rundeck
+    volumes:
+      - "./msql-data:/var/lib/mysql"
