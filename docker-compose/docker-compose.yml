@@ -33,7 +33,7 @@ services:
     volumes:
       - "./rundeck-data:/home/rundeck/server/data"
   mysql:
-    image: mysql:5.7
+    image: mysql:8.0
     expose:
       - 3306
     environment:
