@@ -20,7 +20,7 @@ services:
     ports:
       - 1234:1234
   rundeck:
-    image: rundeck/rundeck:5.1.2
+    image: rundeck/rundeck:5.2.0
     environment:
       RUNDECK_DATABASE_DRIVER: com.mysql.jdbc.Driver
       RUNDECK_DATABASE_USERNAME: rundeck
